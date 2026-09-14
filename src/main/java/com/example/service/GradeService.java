@@ -32,6 +32,7 @@ public class GradeService {
 
     private final GradeMapper gradeMapper;
 
+
     public GradeResponseDto createGrade(
             GradeRequestDto dto) {
 
@@ -41,7 +42,9 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Enrollment not found with id: "
-                                                + dto.getEnrollmentId()));
+                                                + dto.getEnrollmentId()
+                                )
+                        );
 
         Exam exam =
                 examRepository
@@ -49,7 +52,21 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Exam not found with id: "
-                                                + dto.getExamId()));
+                                                + dto.getExamId()
+                                )
+                        );
+
+
+        if (gradeRepository
+                .existsByEnrollmentIdAndExamId(
+                        dto.getEnrollmentId(),
+                        dto.getExamId())) {
+
+            throw new BadRequestException(
+                    "Invalid Data: Grade already exists for this enrollment and exam"
+            );
+        }
+
 
         if (enrollment.getCourse() == null
                 || exam.getCourse() == null
@@ -57,47 +74,63 @@ public class GradeService {
                         .equals(exam.getCourse().getId())) {
 
             throw new BadRequestException(
-                    "Exam course does not match enrollment course");
+                    "Exam course does not match enrollment course"
+            );
         }
+
 
         if (dto.getMarksObtained() > exam.getTotalMarks()) {
 
             throw new BadRequestException(
-                    "Marks obtained cannot be greater than total marks");
+                    "Marks obtained cannot be greater than total marks"
+            );
         }
+
 
         Grade grade =
                 gradeMapper.toEntity(
                         dto,
                         enrollment,
-                        exam);
+                        exam
+                );
 
         Grade savedGrade =
                 gradeRepository.save(grade);
 
-        return gradeMapper.toResponseDto(savedGrade);
+        return gradeMapper.toResponseDto(
+                savedGrade
+        );
     }
+
 
     @Transactional(readOnly = true)
     public Page<GradeResponseDto> getAllGrades(
             Pageable pageable) {
 
-        return gradeRepository.findAll(pageable)
+        return gradeRepository
+                .findAll(pageable)
                 .map(gradeMapper::toResponseDto);
     }
 
+
     @Transactional(readOnly = true)
-    public GradeResponseDto getGradeById(Long id) {
+    public GradeResponseDto getGradeById(
+            Long id) {
 
         Grade grade =
                 gradeRepository.findById(id)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Grade not found with id: "
-                                                + id));
+                                                + id
+                                )
+                        );
 
-        return gradeMapper.toResponseDto(grade);
+        return gradeMapper.toResponseDto(
+                grade
+        );
     }
+
 
     public GradeResponseDto updateGrade(
             Long id,
@@ -108,7 +141,9 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Grade not found with id: "
-                                                + id));
+                                                + id
+                                )
+                        );
 
         Enrollment enrollment =
                 enrollmentRepository
@@ -116,7 +151,9 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Enrollment not found with id: "
-                                                + dto.getEnrollmentId()));
+                                                + dto.getEnrollmentId()
+                                )
+                        );
 
         Exam exam =
                 examRepository
@@ -124,7 +161,22 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Exam not found with id: "
-                                                + dto.getExamId()));
+                                                + dto.getExamId()
+                                )
+                        );
+
+
+        if (gradeRepository
+                .existsByEnrollmentIdAndExamIdAndIdNot(
+                        dto.getEnrollmentId(),
+                        dto.getExamId(),
+                        id)) {
+
+            throw new BadRequestException(
+                    "Invalid Data: Grade already exists for this enrollment and exam"
+            );
+        }
+
 
         if (enrollment.getCourse() == null
                 || exam.getCourse() == null
@@ -132,26 +184,34 @@ public class GradeService {
                         .equals(exam.getCourse().getId())) {
 
             throw new BadRequestException(
-                    "Exam course does not match enrollment course");
+                    "Exam course does not match enrollment course"
+            );
         }
+
 
         if (dto.getMarksObtained() > exam.getTotalMarks()) {
 
             throw new BadRequestException(
-                    "Marks obtained cannot be greater than total marks");
+                    "Marks obtained cannot be greater than total marks"
+            );
         }
+
 
         gradeMapper.updateEntity(
                 grade,
                 dto,
                 enrollment,
-                exam);
+                exam
+        );
 
         Grade updatedGrade =
                 gradeRepository.save(grade);
 
-        return gradeMapper.toResponseDto(updatedGrade);
+        return gradeMapper.toResponseDto(
+                updatedGrade
+        );
     }
+
 
     public void deleteGrade(Long id) {
 
@@ -160,10 +220,13 @@ public class GradeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Grade not found with id: "
-                                                + id));
+                                                + id
+                                )
+                        );
 
         gradeRepository.delete(grade);
     }
+
 
     @Transactional(readOnly = true)
     public Page<GradeResponseDto> searchGrades(
@@ -182,44 +245,54 @@ public class GradeService {
                 grade != null
                         && !grade.trim().isEmpty();
 
+
         if (hasEnrollmentId && hasExamId) {
 
             return gradeRepository
                     .findByEnrollmentIdAndExamId(
                             enrollmentId,
                             examId,
-                            pageable)
+                            pageable
+                    )
                     .map(gradeMapper::toResponseDto);
         }
+
 
         if (hasEnrollmentId) {
 
             return gradeRepository
                     .findByEnrollmentId(
                             enrollmentId,
-                            pageable)
+                            pageable
+                    )
                     .map(gradeMapper::toResponseDto);
         }
+
 
         if (hasExamId) {
 
             return gradeRepository
                     .findByExamId(
                             examId,
-                            pageable)
+                            pageable
+                    )
                     .map(gradeMapper::toResponseDto);
         }
+
 
         if (hasGrade) {
 
             return gradeRepository
                     .findByGradeIgnoreCase(
                             grade.trim(),
-                            pageable)
+                            pageable
+                    )
                     .map(gradeMapper::toResponseDto);
         }
 
-        return gradeRepository.findAll(pageable)
+
+        return gradeRepository
+                .findAll(pageable)
                 .map(gradeMapper::toResponseDto);
     }
 }

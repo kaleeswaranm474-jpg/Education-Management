@@ -4,7 +4,6 @@ import com.example.entity.Grade;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GradeRepository
@@ -26,4 +25,13 @@ public interface GradeRepository
             Long enrollmentId,
             Long examId,
             Pageable pageable);
+
+    boolean existsByEnrollmentIdAndExamId(
+            Long enrollmentId,
+            Long examId);
+
+    boolean existsByEnrollmentIdAndExamIdAndIdNot(
+            Long enrollmentId,
+            Long examId,
+            Long id);
 }

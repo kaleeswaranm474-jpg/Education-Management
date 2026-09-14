@@ -1,5 +1,7 @@
 package com.example.filehandling;
 
+import com.example.exception.BadRequestException;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,15 @@ public class FileStorageService {
                     .normalize();
 
             if (!targetLocation.startsWith(this.fileStorageLocation)) {
-                throw new RuntimeException("Invalid file path");
+                throw new BadRequestException(
+                        "Invalid file path"
+                );
+            }
+
+            if (Files.exists(targetLocation)) {
+                throw new BadRequestException(
+                        "Invalid Data: File already exists: " + fileName
+                );
             }
 
             Files.copy(

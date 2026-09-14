@@ -20,49 +20,33 @@ public class DataInitializer {
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicy passwordPolicy;
 
-
     @Value("${app.default-users.admin-password:Admin@12345}")
     private String adminPassword;
-
 
     @Value("${app.default-users.teacher-password:Teacher@12345}")
     private String teacherPassword;
 
-
     @Value("${app.default-users.student-password:Student@12345}")
     private String studentPassword;
-
 
     @Bean
     public CommandLineRunner createDefaultUsers() {
 
         return args -> {
 
-            passwordPolicy.validate(
-                    adminPassword
-            );
+            passwordPolicy.validate(adminPassword);
+            passwordPolicy.validate(teacherPassword);
+            passwordPolicy.validate(studentPassword);
 
-            passwordPolicy.validate(
-                    teacherPassword
-            );
+            // Admin
+            if (!userRepository.existsByUsername("admin")) {
 
-            passwordPolicy.validate(
-                    studentPassword
-            );
-
-
-            if (!userRepository.existsByUsername(
-                    "admin")) {
-
-                User admin =
-                        new User();
+                User admin = new User();
 
                 admin.setUsername("admin");
 
                 admin.setPassword(
-                        passwordEncoder.encode(
-                                adminPassword
-                        )
+                        passwordEncoder.encode(adminPassword)
                 );
 
                 admin.setRole("ADMIN");
@@ -70,19 +54,15 @@ public class DataInitializer {
                 userRepository.save(admin);
             }
 
+            // Teacher
+            if (!userRepository.existsByUsername("teacher")) {
 
-            if (!userRepository.existsByUsername(
-                    "teacher")) {
-
-                User teacher =
-                        new User();
+                User teacher = new User();
 
                 teacher.setUsername("teacher");
 
                 teacher.setPassword(
-                        passwordEncoder.encode(
-                                teacherPassword
-                        )
+                        passwordEncoder.encode(teacherPassword)
                 );
 
                 teacher.setRole("TEACHER");
@@ -90,19 +70,15 @@ public class DataInitializer {
                 userRepository.save(teacher);
             }
 
+            // Student
+            if (!userRepository.existsByUsername("student")) {
 
-            if (!userRepository.existsByUsername(
-                    "student")) {
-
-                User student =
-                        new User();
+                User student = new User();
 
                 student.setUsername("student");
 
                 student.setPassword(
-                        passwordEncoder.encode(
-                                studentPassword
-                        )
+                        passwordEncoder.encode(studentPassword)
                 );
 
                 student.setRole("STUDENT");

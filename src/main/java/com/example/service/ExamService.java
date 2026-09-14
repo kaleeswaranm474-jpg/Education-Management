@@ -4,6 +4,7 @@ import com.example.dto.ExamRequestDto;
 import com.example.dto.ExamResponseDto;
 import com.example.entity.Course;
 import com.example.entity.Exam;
+import com.example.exception.BadRequestException;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.ExamMapper;
 import com.example.repository.CourseRepository;
@@ -32,6 +33,17 @@ public class ExamService {
     )
     public ExamResponseDto createExam(
             ExamRequestDto dto) {
+
+        if (examRepository
+                .existsByExamNameIgnoreCaseAndCourseIdAndExamDate(
+                        dto.getExamName(),
+                        dto.getCourseId(),
+                        dto.getExamDate())) {
+
+            throw new BadRequestException(
+                    "Invalid Data: Exam already exists for this course on this date"
+            );
+        }
 
         Course course =
                 courseRepository
@@ -116,6 +128,18 @@ public class ExamService {
                                                 + dto.getCourseId()
                                 )
                         );
+
+        if (examRepository
+                .existsByExamNameIgnoreCaseAndCourseIdAndExamDateAndIdNot(
+                        dto.getExamName(),
+                        dto.getCourseId(),
+                        dto.getExamDate(),
+                        id)) {
+
+            throw new BadRequestException(
+                    "Invalid Data: Exam already exists for this course on this date"
+            );
+        }
 
         examMapper.updateEntity(
                 exam,
